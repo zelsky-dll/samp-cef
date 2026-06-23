@@ -427,12 +427,12 @@ initialize_plugin!(
         let _ = samp::plugin::logger(); // fuck logger
 
         // let mut config = simplelog::ConfigBuilder::new();
-
+        //
         // let config = config
         //     .add_filter_allow_str("server")
         //     .set_max_level(LevelFilter::Trace)
         //     .build();
-
+        //
         // CombinedLogger::init(vec![TermLogger::new(
         //     LevelFilter::Trace,
         //     config,
