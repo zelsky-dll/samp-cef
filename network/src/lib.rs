@@ -86,9 +86,7 @@ impl Socket {
         let (event_tx, event_rx) = crossbeam_channel::unbounded();
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
 
-        runtime.block_on(async move {
-            tokio::spawn(worker_task(endpoint, cmd_rx, event_tx, is_listening));
-        });
+        runtime.spawn(worker_task(endpoint, cmd_rx, event_tx, is_listening));
 
         Self {
             _runtime: runtime,
@@ -174,20 +172,18 @@ async fn worker_task(
 
     while let Some(cmd) = cmd_rx.recv().await {
         match cmd {
-            Command::Connect(addr, peer_id) => {
-                match endpoint.connect(addr, "samp.cef") {
-                    Ok(connecting) => {
-                        tokio::spawn(process_connection(
-                            connecting,
-                            event_tx.clone(),
-                            Some(peer_id),
-                        ));
-                    }
-                    Err(_) => {
-                        let _ = event_tx.send(WorkerEvent::ConnectionError(peer_id));
-                    }
+            Command::Connect(addr, peer_id) => match endpoint.connect(addr, "samp.cef") {
+                Ok(connecting) => {
+                    tokio::spawn(process_connection(
+                        connecting,
+                        event_tx.clone(),
+                        Some(peer_id),
+                    ));
                 }
-            }
+                Err(_) => {
+                    let _ = event_tx.send(WorkerEvent::ConnectionError(peer_id));
+                }
+            },
 
             Command::Close => {
                 endpoint.close(0u32.into(), &[]);
